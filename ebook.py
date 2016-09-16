@@ -5,7 +5,9 @@ import re
 import ast
 import os
 from PIL import Image
-from fpdf import FPDF
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, PageBreak, PageTemplate, Frame
+import reportlab
 
 BID = '12221386'
 
@@ -70,23 +72,33 @@ def download_book(book_info):
             # print(url)
 
 
-def convert_to_pdf(dir):
-    pdf = FPDF()
+def restore_image_extention(dir):
     entries = os.scandir(dir)
     for entry in entries:
         path = entry.path
         im = Image.open(path)
-        width, height = im.size
-        pdf.add_page()
-        try:
-            pdf.image(path, 0, 0, width, height, im.format)
-        except Exception as e:
-            print('error reading image file:', path)
-        finally:
-            im.close()
-    pdf.output('out.pdf', 'F')
+        real_format = im.format
+        im.close()
+        os.rename(path, os.path.splitext(path)[0] + '.' + real_format.lower())
 
-#book_url = request_book(BID)
-#book_info = get_book(book_url)
+
+def convert_to_pdf(dir):
+    width, height = A4
+    story = []
+    entries = os.scandir(dir)
+    for entry in entries:
+        path = entry.path
+        story.append(reportlab.platypus.Image(path, width, height))
+        story.append(PageBreak())
+    doc = SimpleDocTemplate("out.pdf", pagesize=A4)
+    template = PageTemplate(
+        'Later', [Frame(0, 0, width, height, 0, 0, 0, 0, id='F1')])
+    doc.addPageTemplates(template)
+    doc.build(story)
+
+
+# book_url = request_book(BID)
+# book_info = get_book(book_url)
 # download_book(book_info)
+# restore_image_extention('12221386')
 convert_to_pdf('12221386')
