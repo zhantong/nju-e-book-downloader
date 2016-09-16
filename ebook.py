@@ -11,6 +11,8 @@ cj = http.cookiejar.CookieJar()
 opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
 base_url = 'http://114.212.7.104:8181'
 
+IS_PIC_NAME_ALPHA_SORTED = True
+
 
 def request_book(BID):
     prepare = urllib.request.Request(url=base_url, method='GET')
@@ -49,14 +51,20 @@ def get_book(url):
 
 
 def download_book(book_info):
+    alpha = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
     pic_base_url = book_info['pic_base_url']
     os.mkdir(BID)
     for index, pages_cat in enumerate(book_info['pages']):
         cat = book_info['pages_info'][index]
+        cat_alpha = alpha[index]
         for page in range(pages_cat[0], pages_cat[1] + 1):
             pic_name = cat + str(page).zfill(6 - len(cat)) + '.jpg'
             url = pic_base_url + pic_name
-            urllib.request.urlretrieve(url, BID + '/' + pic_name)
+            pic_save_name = pic_name
+            if IS_PIC_NAME_ALPHA_SORTED:
+                pic_save_name = cat_alpha + \
+                    str(page).zfill(6 - len(cat_alpha)) + '.jpg'
+            urllib.request.urlretrieve(url, BID + '/' + pic_save_name)
             # print(url)
 book_url = request_book(BID)
 book_info = get_book(book_url)
