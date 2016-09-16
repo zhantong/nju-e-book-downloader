@@ -4,6 +4,8 @@ import http.cookiejar
 import re
 import ast
 import os
+from PIL import Image
+from fpdf import FPDF
 
 BID = '12221386'
 
@@ -66,6 +68,25 @@ def download_book(book_info):
                     str(page).zfill(6 - len(cat_alpha)) + '.jpg'
             urllib.request.urlretrieve(url, BID + '/' + pic_save_name)
             # print(url)
-book_url = request_book(BID)
-book_info = get_book(book_url)
-download_book(book_info)
+
+
+def convert_to_pdf(dir):
+    pdf = FPDF()
+    entries = os.scandir(dir)
+    for entry in entries:
+        path = entry.path
+        im = Image.open(path)
+        width, height = im.size
+        pdf.add_page()
+        try:
+            pdf.image(path, 0, 0, width, height, im.format)
+        except Exception as e:
+            print('error reading image file:', path)
+        finally:
+            im.close()
+    pdf.output('out.pdf', 'F')
+
+#book_url = request_book(BID)
+#book_info = get_book(book_url)
+# download_book(book_info)
+convert_to_pdf('12221386')
